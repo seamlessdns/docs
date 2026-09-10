@@ -13,7 +13,7 @@ Service Providers may support either or both.
 
 This document names the actor responsible for each action. Do not use the unqualified term "provider" in integration requirements or implementation notes.
 
-- **Service Provider (SP):** the application or service that initiates a domain operation for its customer and receives status from Seamless Connect.
+- **Service Provider (SP):** the application or service that requests a domain operation for its customer and receives status from Seamless Connect.
 - **DNS Provider:** the operator of the authoritative DNS service and DNS management API used to read or change DNS records.
 - **Registrar:** the organization sponsoring the domain registration. A Registrar may also act as the DNS Provider, but registration and DNS-hosting responsibilities remain distinct.
 - **Domain Owner:** the registrant or authorized user approving access or changes.
@@ -23,7 +23,7 @@ One organization may perform more than one role. Name the role being performed r
 
 ## What Seamless Connect handles
 
-Unless a specific integration requires otherwise, Seamless Connect owns the complexity between the Service Provider request and the infrastructure provider executing it:
+All integrations use one consistent, openly documented integration contract. Within that contract, Seamless Connect owns the complexity between the Service Provider request and the infrastructure provider executing it:
 
 - DNS Provider discovery;
 - Domain Connect template retrieval, validation, and approval;
@@ -39,6 +39,8 @@ Unless a specific integration requires otherwise, Seamless Connect owns the comp
 - shared conformance and integration observability.
 
 The Service Provider should not need to implement separate integrations for each supported DNS Provider.
+
+Provider-specific capabilities and constraints are documented openly in this repository and handled through the common contract, not through private bilateral exceptions.
 
 ## Minimum integration
 

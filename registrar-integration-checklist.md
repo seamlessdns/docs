@@ -6,16 +6,17 @@ The initial Registrar integration is intentionally narrow:
 
 **automate DNSSEC delegation management between the Domain Owner, DNS Provider, and Registrar.**
 
-Domain registration, transfer, nameserver management, and other registrar operations are out of scope for this initial integration.
+Domain registration, availability, pricing, payment, renewals, transfers, nameserver management, and broad Registrar CRUD APIs are explicitly out of scope for this phase.
 
-Seamless Connect should absorb as much cross-provider coordination complexity as possible while allowing the Registrar to retain control over authorization, policy, and authoritative registration-side changes.
+Seamless Connect should absorb as much cross-provider coordination complexity as possible while allowing the Registrar to retain control over authorization, policy, and authoritative parent-side DNSSEC delegation changes.
 
 ## Terminology and roles
 
 This document names the actor responsible for each action. Do not use the unqualified term "provider" in integration requirements or implementation notes.
 
-- **Registrar:** the organization sponsoring the domain registration and able to submit or manage delegation data for the domain.
-- **DNS Provider:** the operator of the authoritative DNS service responsible for signing the zone and publishing DNSSEC signaling records.
+- **Service Provider (SP):** the application or service that requests an operation for its customer and receives status from Seamless Connect.
+- **Registrar:** the organization sponsoring the domain registration and handling parent-side DNSSEC delegation.
+- **DNS Provider:** the operator of the authoritative DNS service that executes DNS-zone operations and prepares child-side DNSSEC state, including signing the zone and publishing DNSSEC signaling records.
 - **Domain Owner:** the registrant or authorized user approving DNSSEC-related actions.
 - **Registry:** the operator of the parent zone where DS records ultimately become authoritative.
 - **Parental Agent:** the system authorized to act on the parent side of DNSSEC delegation automation, whether operated by the Registrar, Registry, Seamless Connect, or another delegated component.
@@ -25,7 +26,7 @@ One organization may perform more than one role. Name the role being performed r
 
 ## What Seamless Connect handles
 
-Unless a specific Registrar integration requires otherwise, Seamless Connect owns the coordination required to move a DNSSEC operation safely between the DNS Provider and Registrar.
+All integrations use one consistent, openly documented integration contract. Within that contract, Seamless Connect owns the coordination required to move a DNSSEC operation safely between the DNS Provider and Registrar.
 
 This may include:
 
@@ -48,9 +49,11 @@ This may include:
 
 The Registrar should not need to build separate integrations with every participating DNS Provider.
 
+Registrar-specific capabilities, limitations, and policy constraints must be documented in this open-source repository as reviewable metadata, not established through private bilateral exceptions.
+
 ## Minimum integration
 
-The initial integration should support the same standards-based DNSSEC lifecycle regardless of which side initiates the operation.
+The initial integration uses the same standards-based DNSSEC lifecycle regardless of which supported side initiates the operation. Registrar-originated initiation is the working pilot proposal, not a requirement for every integration.
 
 ### Working pilot proposal: registrar-originated
 
@@ -110,7 +113,7 @@ The second model is especially useful where the Registrar already detects or rea
 
 **Registrar work:**
 
-1. Authorize or accept registrar-originated DNSSEC intent for the working pilot, while documenting any other supported initiation path.
+1. For the working pilot proposal, authorize or accept registrar-originated DNSSEC intent; otherwise document the supported initiation path.
 2. Provide Seamless Connect with scoped authorization where direct Registrar API access is required.
 3. Expose or identify the existing path used to read and update DS information.
 4. Publish the Registrar's supported DNSSEC automation capabilities and policy constraints.
@@ -138,7 +141,7 @@ Seamless Connect does not replace CDS/CDNSKEY or other DNSSEC standards. It prov
 
 Where functionality is not defined by an existing standard, Seamless Connect should use an explicit, deterministic operation and document the gap openly, with the goal of adopting or developing interoperable standards rather than creating a closed protocol.
 
-The Domain Owner or authorized application chooses the operation. Seamless Connect coordinates a published and auditable workflow. It does not invent privileged domain changes.
+Service Providers request operations when they participate, subject to Domain Owner authorization. Seamless Connect also supports the documented Registrar- and DNS-provider-originated DNSSEC initiation patterns. Seamless Connect coordinates a published and auditable workflow; it does not invent privileged domain changes.
 
 ## Initial integration: DNSSEC
 
@@ -173,7 +176,7 @@ This path is useful when the Registrar is the natural control plane for domain l
 
 The Registrar does not necessarily need to build new UI for the initial pilot. Seamless Connect may provide the pilot UI or API while relying on Registrar authorization to establish the Domain Owner's authority.
 
-For the working pilot, the Registrar's required role is to authorize or accept that registrar-originated intent and expose its existing DS-management path. Seamless Connect may provide or coordinate the Parental Agent processing that validates the DNS Provider's child-side signals and uses that path; the Registrar does not need to build a new Parental Agent implementation solely for the pilot.
+Under the working pilot proposal, the Registrar would authorize or accept that registrar-originated intent and expose its existing DS-management path. Seamless Connect may provide or coordinate the Parental Agent processing that validates the DNS Provider's child-side signals and uses that path; the Registrar does not need to build a new Parental Agent implementation solely for the pilot.
 
 #### Path B: DNS-provider-originated initiation
 
@@ -550,7 +553,7 @@ The initial Registrar integration and pilot do not require Seamless Connect to s
 - renewals, expiration, or redemption;
 - registrant contact management;
 - broad Registrar account administration;
-- general-purpose Registrar APIs; or
+- broad or general-purpose Registrar CRUD APIs; or
 - Registry operations unrelated to DNSSEC delegation.
 
 These capabilities may be evaluated independently in future work. They should not expand the scope, authorization requirements, or implementation estimate for the initial DNSSEC integration.

@@ -2,19 +2,20 @@
 
 Use this checklist to scope and estimate a DNS Provider integration with Seamless Connect. It separates DNS Provider-owned work from responsibilities handled by Seamless Connect and is intended for a joint product and engineering review.
 
-The working pilot is intentionally narrow:
+A DNS Provider integration covers two technical integration families:
 
-**support registrar-originated DNSSEC enablement by preparing and signing the child zone, publishing CDS/CDNSKEY, and exposing enough state for Seamless Connect to coordinate parent-side completion.**
+1. **DNS updates** — execute standard Domain Connect protocol flows and/or explicit DNS record operations such as read, create, update, and delete.
+2. **DNSSEC child-side readiness** — authorize the requested child-zone operation, enable signing, expose DNSSEC state, publish CDS/CDNSKEY, declare provider capabilities and policies, return status, and support verification.
 
-The remainder of the checklist also covers the broader DNS record automation capabilities that a DNS Provider integration may support beyond the initial DNSSEC pilot.
+The DNS Provider executes operations against the authoritative DNS zone and prepares child-side DNSSEC state. It does not perform domain registration workflows or parent-side DNSSEC delegation changes.
 
 ## Terminology and roles
 
 This document names the actor responsible for each action. Do not use the unqualified term "provider" in integration requirements or implementation notes.
 
-- **Service Provider (SP):** the application or service that initiates a domain configuration request for its customer and receives status from Seamless Connect.
-- **DNS Provider:** the operator of the authoritative DNS service and DNS management API used to read or change the domain's DNS records.
-- **Registrar:** the organization sponsoring the domain registration. A Registrar may also act as the DNS Provider, but registration and DNS-hosting responsibilities remain distinct.
+- **Service Provider (SP):** the application or service that requests a DNS or domain operation for its customer and receives status from Seamless Connect.
+- **DNS Provider:** the operator of the authoritative DNS service that executes DNS-zone operations and prepares child-side DNSSEC state.
+- **Registrar:** the organization sponsoring the domain registration and handling parent-side DNSSEC delegation. A Registrar may also act as the DNS Provider, but the two roles remain distinct.
 - **Domain Owner:** the registrant or authorized user who approves access and DNS changes.
 - **Registry:** the operator of the parent zone where DS records ultimately become authoritative.
 - **Parental Agent:** the system authorized to act on the parent side of DNSSEC delegation automation, whether operated by the Registrar, Registry, Seamless Connect, or another delegated component.
@@ -24,13 +25,15 @@ One organization may perform more than one role. Name the role being performed�
 
 ## Seamless Connect responsibilities
 
-DNS Provider integrations follow a consistent common integration contract across providers. Seamless Connect owns coordination across the administrative boundaries involved in an operation. Depending on the use case, this includes the Domain Owner, DNS Provider, Registrar, Parental Agent, Registry, and Service Provider.
+DNS Provider integrations follow one consistent, openly documented integration contract across providers. Seamless Connect owns coordination across the administrative boundaries involved in an operation. Depending on the use case, this includes the Domain Owner, DNS Provider, Registrar, Parental Agent, Registry, and Service Provider.
 
+- discovering the authoritative DNS Provider and mapping the domain to the correct account and zone;
+- retrieving, validating, and approving Domain Connect templates;
+- translating standard Domain Connect requests and explicit DNS operations into DNS Provider-specific API calls;
 - accepting registrar-originated DNSSEC intent and coordinating child-side readiness;
 - observing CDS/CDNSKEY signals and coordinating Parental Agent or Registrar processing;
 - verifying DS publication and the resulting DNSSEC state;
-- analyzing Domain Connect templates and translating them into executable DNS changes where record automation is in scope;
-- accepting standard-based and intent-based operations from authorized initiators and maintaining operation state;
+- accepting standard Domain Connect requests and explicit DNS or DNSSEC operations from authorized initiators and maintaining operation state;
 - normalizing synchronous and asynchronous DNS Provider behavior behind one lifecycle;
 - applying bounded retries and backoff to DNS Provider-classified retryable failures;
 - performing DNS read-back verification and recording the result;
@@ -38,11 +41,11 @@ DNS Provider integrations follow a consistent common integration contract across
 - delivering current and final status to the initiating actor; and
 - providing shared conformance fixtures and integration observability.
 
-The DNS Provider remains the authority for child-zone access, DNS data, DNS Provider API behavior, DNS Provider policy, safety constraints, and the truth of DNS Provider-side execution. The Registrar carries or enforces the Domain Owner's authority over the domain delegation and remains the authority for registration-side changes. Seamless Connect must enforce each participant's published rules and must not claim capabilities absent from reviewed capability metadata. Provider-specific capabilities, limitations, policy constraints, and deviations from optional features must be documented openly in this repository. Interoperability depends on shared, reviewable behavior rather than private bilateral agreements or hidden integration contracts.
+The Service Provider requests an operation. The DNS Provider remains the authority for child-zone access, DNS data, DNS Provider API behavior, DNS Provider policy, safety constraints, and the truth of DNS Provider-side execution. The Registrar carries or enforces the Domain Owner's authority over the domain delegation and remains the authority for parent-side DNSSEC delegation. Seamless Connect coordinates the operation and must enforce each participant's published rules without claiming capabilities absent from reviewed capability metadata. Provider-specific capabilities, limitations, policy constraints, and deviations from optional features must be documented openly in this repository. Interoperability depends on shared, reviewable behavior rather than private bilateral agreements or hidden integration contracts.
 
-## Initial DNSSEC pilot: registrar-originated
+## DNSSEC pilot proposal: registrar-originated
 
-The initial DNSSEC lifecycle begins with the Domain Owner exercising domain-level authority through the Registrar. Seamless Connect then coordinates the DNS Provider and parent-side processing.
+The working DNSSEC pilot proposal begins with the Domain Owner exercising domain-level authority through the Registrar. Seamless Connect then coordinates the DNS Provider and parent-side processing. This is a proposed pilot initiation pattern, not a requirement that every DNS Provider integration originate at the Registrar.
 
 ```text
 Domain Owner
@@ -73,7 +76,7 @@ Registrar
 Registry / Parent
 ```
 
-The DNS Provider controls whether and how the child zone is signed. It does not decide independently that the Domain Owner wants the parent delegation changed. For the working pilot, the Registrar establishes that intent and Seamless Connect carries the workflow across the two control planes.
+The DNS Provider controls whether and how the child zone is signed. It does not independently perform the Registrar's parent-side delegation change. Under the working pilot proposal, the Registrar establishes the Domain Owner's intent and Seamless Connect carries the workflow across the two control planes.
 
 **DNS Provider work for the pilot:**
 
@@ -84,11 +87,11 @@ The DNS Provider controls whether and how the child zone is signed. It does not 
 
 The same child-side standards should also support a DNS-provider-originated lifecycle where the Domain Owner enables DNSSEC at the DNS Provider and an existing Parental Agent detects or reacts to CDS/CDNSKEY. Both initiation paths should converge on the same signing, signaling, policy, and verification behavior.
 
-## Definition of ready for a pilot estimate
+## Definition of ready for an integration estimate
 
 A DNS Provider integration is ready for a credible engineering estimate when:
 
-- the initial use case, record types, actions, and operation mode are fixed;
+- the DNS update and/or DNSSEC operation families in scope, record types, actions, and operation modes are fixed;
 - for DNSSEC, signing behavior, CDS/CDNSKEY support, and child-readiness semantics are known;
 - Domain Owner authorization scopes and the DNS Provider sandbox flow are known;
 - DNS Provider endpoints, error behavior, limits, and asynchronous semantics are documented;
@@ -100,18 +103,19 @@ A DNS Provider integration is ready for a credible engineering estimate when:
 
 ## DNS Provider integration checklist
 
-### 1. Choose the initial operation scope
+### 1. Choose the operation scope
 
 <details>
 <summary>Checklist items</summary>
 
-- [ ] Select the smallest end-to-end use case for the pilot.
-- [ ] For the working DNSSEC pilot, include registrar-originated enablement from authorized intent through verified DS publication.
-- [ ] List the DNS record types and actions required by that use case.
-- [ ] Decide whether each action is supported through a Domain Connect standard-based operation, a Seamless Connect intent-based operation, or both.
+- [ ] Define the supported DNS update scope: standard Domain Connect protocol flows, explicit DNS record read/create/update/delete operations, or both.
+- [ ] Define the supported DNSSEC child-side scope: authorization, signing, state exposure, CDS/CDNSKEY publication, status, and verification support.
+- [ ] For the working DNSSEC pilot proposal, include registrar-originated enablement from authorized intent through verified DS publication.
+- [ ] List the DNS record types and actions required by each supported use case.
+- [ ] Decide whether each DNS update is supported through a Domain Connect standard-based operation, an explicit Seamless Connect DNS operation, or both.
 - [ ] Identify excluded operations explicitly so Service Providers do not infer support.
 - [ ] Define DNS Provider account, zone, reseller, and domain-state restrictions that affect the scope.
-- [ ] Identify whether the DNS Provider is also the Registrar and document any registration-specific dependencies separately from DNS-hosting dependencies.
+- [ ] If the same organization is also the Registrar, document parent-side DNSSEC dependencies separately from DNS Provider responsibilities without adding domain-registration workflows to this checklist.
 - [ ] Document any supported DNS-provider-originated DNSSEC path without making it a prerequisite for the registrar-originated pilot.
 
 </details>
@@ -219,7 +223,7 @@ Changes to these files should use the normal pull request review process so DNS 
 <details>
 <summary>Checklist items</summary>
 
-- [ ] Map every supported standard-based or intent-based Seamless Connect operation to one or more DNS Provider API calls or documented workflows.
+- [ ] Map every supported Domain Connect flow and explicit DNS record read/create/update/delete operation to one or more DNS Provider API calls or documented workflows.
 - [ ] For DNSSEC, map the child-readiness operation through signing and CDS/CDNSKEY publication without treating it as an immediate parent-side DS change.
 - [ ] Define input normalization, validation, conflict detection, and idempotency rules.
 - [ ] Define compensation or safe-stop behavior when a multi-call DNS Provider operation partially succeeds.
