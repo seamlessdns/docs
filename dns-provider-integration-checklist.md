@@ -24,7 +24,7 @@ One organization may perform more than one role. Name the role being performedâ€
 
 ## Seamless Connect responsibilities
 
-Unless an integration requires a different written agreement, Seamless Connect owns coordination across the administrative boundaries involved in an operation. Depending on the use case, this includes the Domain Owner, DNS Provider, Registrar, Parental Agent, Registry, and Service Provider.
+DNS Provider integrations follow a consistent common integration contract across providers. Seamless Connect owns coordination across the administrative boundaries involved in an operation. Depending on the use case, this includes the Domain Owner, DNS Provider, Registrar, Parental Agent, Registry, and Service Provider.
 
 - accepting registrar-originated DNSSEC intent and coordinating child-side readiness;
 - observing CDS/CDNSKEY signals and coordinating Parental Agent or Registrar processing;
@@ -38,7 +38,7 @@ Unless an integration requires a different written agreement, Seamless Connect o
 - delivering current and final status to the initiating actor; and
 - providing shared conformance fixtures and integration observability.
 
-The DNS Provider remains the authority for child-zone access, DNS data, DNS Provider API behavior, DNS Provider policy, safety constraints, and the truth of DNS Provider-side execution. The Registrar carries or enforces the Domain Owner's authority over the domain delegation and remains the authority for registration-side changes. Seamless Connect must enforce each participant's published rules and must not claim capabilities absent from reviewed capability metadata.
+The DNS Provider remains the authority for child-zone access, DNS data, DNS Provider API behavior, DNS Provider policy, safety constraints, and the truth of DNS Provider-side execution. The Registrar carries or enforces the Domain Owner's authority over the domain delegation and remains the authority for registration-side changes. Seamless Connect must enforce each participant's published rules and must not claim capabilities absent from reviewed capability metadata. Provider-specific capabilities, limitations, policy constraints, and deviations from optional features must be documented openly in this repository. Interoperability depends on shared, reviewable behavior rather than private bilateral agreements or hidden integration contracts.
 
 ## Initial DNSSEC pilot: registrar-originated
 
@@ -156,7 +156,7 @@ Where Seamless Connect directly invokes DNS Provider APIs, it needs narrow autho
 
 ### 4. Publish DNS Provider policy and safety constraints
 
-DNS Provider-specific behavior must be visible and reviewable rather than embedded as undocumented adapter logic.
+DNS Provider-specific behavior must be visible and reviewable rather than embedded as undocumented adapter logic. Legitimate differences must be expressed as capability or policy metadata within the common integration contract, not as private or hidden integration contracts.
 
 <details>
 <summary>Checklist items</summary>
@@ -167,6 +167,7 @@ DNS Provider-specific behavior must be visible and reviewable rather than embedd
 - [ ] Define whether Seamless Connect may replace, merge, or delete pre-existing records.
 - [ ] Define the DNS Provider's required Domain Owner warnings, confirmations, and audit information.
 - [ ] Identify constraints that Seamless Connect can enforce automatically and those that require Domain Owner or DNS Provider review.
+- [ ] Document unsupported optional features and any provider-specific deviations from optional behavior in the repository's capability or policy metadata.
 
 </details>
 
