@@ -3,7 +3,7 @@
 ## Workstreams
 
 - [DNSSEC Automation](workstreams/dnssec.md)
-- [Domain Connect](workstreams/domain-connect.md)
+- [DNS Configuration](workstreams/dns-configuration.md)
 - [Domain Registration](workstreams/domain-registration.md)
 - [Domain Transfer](workstreams/domain-transfer.md)
 - [Agent Bootstrap](workstreams/agent-bootstrap.md)
